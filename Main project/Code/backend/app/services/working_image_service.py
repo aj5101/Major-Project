@@ -8,8 +8,11 @@ import requests
 import json
 import base64
 import uuid
+import urllib3
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 load_dotenv()
 
@@ -82,7 +85,8 @@ class WorkingImageService:
                 "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image",
                 headers=headers,
                 json=payload,
-                timeout=60
+                timeout=60,
+                verify=False
             )
             
             if response.status_code == 200:
