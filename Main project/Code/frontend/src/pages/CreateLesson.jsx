@@ -170,7 +170,7 @@ export default function CreateLesson() {
         throw new Error(data.message || "Failed to generate lesson");
       }
 
-      setStatus("✨ AI lesson created successfully!");
+      setStatus("✨ Lesson created! Loading result...");
 
       // Prepare lesson data for navigation
       const lessonData = data.lesson_data;
@@ -209,33 +209,11 @@ export default function CreateLesson() {
 
     } catch (error) {
       console.error("AI lesson generation failed:", error);
-      
-      // Fallback to original pipeline if AI fails
-      try {
-        setStatus("🔄 AI failed, using standard pipeline...");
-        const lesson = buildLessonPayload();
-        const fullText = lesson.sentences.map((s) => s.simplified || s.text).join(" ");
-
-        const response = await generativeASLAPI.generateAvatarASL(fullText);
-        const data = response.data;
-
-        const videoId = `lesson-${data.video_file.replace(".mp4", "")}`;
-        navigate(`/lesson/${videoId}`, {
-          state: {
-            lessonMode: true,
-            lessonTitle: lesson.lesson_title,
-            sentences: lesson.sentences,
-            originalText: lesson.sentences.map((s) => s.text).join(" "),
-            simplifiedText: fullText,
-            videoFile: data.video_file,
-            isGenerativeAvatar: true,
-            duration: data.duration,
-            previewOnly: !!previewOnly,
-            aiFallback: true,
-          },
-        });
-      } catch (fallbackError) {
-        setStatus(`❌ Error: ${error.message || fallbackError.message || "Failed to create lesson"}`);
+      const msg = error.message || "Failed to create lesson";
+      if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("timeout")) {
+        setStatus("❌ Cannot reach the backend server. Make sure it is running on port 8000.");
+      } else {
+        setStatus(`❌ ${msg}`);
       }
     } finally {
       setBusy(false);

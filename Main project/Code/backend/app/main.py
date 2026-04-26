@@ -24,12 +24,15 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 if project_root not in sys.path:
     sys.path.append(project_root)
 
+_realtime_router_available = False
 try:
     from app.routes.realtime_asl_simplified import router as realtime_asl_router
+    _realtime_router_available = True
     print("✅ Successfully imported simplified realtime ASL route")
-except ImportError as e:
+except Exception as e:
     print(f"❌ Failed to import simplified realtime ASL route: {e}")
-    # Continue with dynamic route
+    from fastapi import APIRouter as _APIRouter
+    realtime_asl_router = _APIRouter()  # empty fallback so include_router never crashes
 
 # Load environment variables
 load_dotenv()
@@ -45,10 +48,10 @@ app = FastAPI(
 # Allows frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv(
+    allow_origins=[o.strip() for o in os.getenv(
         "CORS_ORIGINS",
         "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173",
-    ).split(","),
+    ).split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

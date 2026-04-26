@@ -7,6 +7,7 @@ import AdminPage from './pages/AdminPage'
 import Navbar from './components/Navbar'
 import CreateLesson from './pages/CreateLesson'
 import Vocabulary from './pages/Vocabulary'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 /**
  * Main App Component
@@ -20,6 +21,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-fun-purple-50">
         <Navbar />
         <main className="container mx-auto px-4 py-8">
+          <ErrorBoundary>
           <Routes>
             <Route path="/" element={<HomePage />} />
             {/* Classroom flow */}
@@ -32,6 +34,7 @@ function App() {
             <Route path="/lesson/:videoId" element={<VideoResultPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
+          </ErrorBoundary>
         </main>
       </div>
     </Router>

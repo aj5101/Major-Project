@@ -136,14 +136,10 @@ class RealTimeASLGenerator:
                     c.close()
                 print(f"   ✅ Successfully stitched video: {final_video_path}")
             else:
-                # If no clips were found, just write an empty placeholder
-                print("   ⚠️ No matching clips found. Writing placeholder.")
-                with open(final_video_path, 'w') as f:
-                    f.write("Placeholder video - no matching ASL clips found for input")
+                print("   ⚠️ No matching ASL clips found for input concepts.")
         except Exception as e:
             print(f"   ❌ Error stitching video: {e}")
-            with open(final_video_path, 'w') as f:
-                f.write("Placeholder video - error occurred during stitching")
+            # Do not write a fake video file — let the caller handle the missing file
         
         return {
             'video_file': filename,

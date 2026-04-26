@@ -13,10 +13,14 @@ console.log('[API] baseURL =', API_BASE_URL)
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 120000, // 2 min — image generation can be slow
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
+// Derive the storage base URL from the API base (strip /api suffix)
+export const STORAGE_BASE_URL = API_BASE_URL.replace(/\/api$/, '')
 
 // Request interceptor
 api.interceptors.request.use(

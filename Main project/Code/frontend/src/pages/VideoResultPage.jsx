@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
-import { videoAPI } from '../services/api'
+import { videoAPI, STORAGE_BASE_URL } from '../services/api'
 
 /**
  * Video Result Page Component
@@ -40,7 +40,7 @@ function VideoResultPage() {
       console.log('[VideoResultPage] imageData received:', imageData)
       console.log('[VideoResultPage] image count:', imageData?.images?.length)
       imageData?.images?.forEach((img, i) => {
-        const url = `http://127.0.0.1:8000/storage/processed/images/${img.image_file}`
+        const url = `${STORAGE_BASE_URL}/storage/processed/images/${img.image_file}`
         console.log(`[VideoResultPage] image[${i}] url:`, url, '| concept:', img.concept)
         fetch(url, { method: 'HEAD' })
           .then(r => console.log(`[VideoResultPage] image[${i}] HEAD status:`, r.status))
@@ -203,26 +203,26 @@ function VideoResultPage() {
 
   const aslVideoSrc = useMemo(() => {
     if (isPresetDemo) {
-      return `http://127.0.0.1:8000/storage/processed/preset_videos/${location.state?.videoFile}`
+      return `${STORAGE_BASE_URL}/storage/processed/preset_videos/${location.state?.videoFile}`
     }
     if (isRealtimeText) {
-      return `http://127.0.0.1:8000/storage/processed/realtime/${location.state?.videoFile}`
+      return `${STORAGE_BASE_URL}/storage/processed/realtime/${location.state?.videoFile}`
     }
     if (isGenerativeAvatar) {
-      return `http://127.0.0.1:8000/api/generated/generative/${location.state?.videoFile}`
+      return `${STORAGE_BASE_URL}/api/generated/generative/${location.state?.videoFile}`
     }
     if (isAIGenerated) {
-      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state?.videoFile}`
+      return `${STORAGE_BASE_URL}/storage/processed/dynamic/${location.state?.videoFile}`
     }
     if (!location.state && videoId && videoId.startsWith('ai-lesson-')) {
       const videoFile = videoId.replace('ai-lesson-', '') + '.mp4'
-      return `http://127.0.0.1:8000/storage/processed/dynamic/${videoFile}`
+      return `${STORAGE_BASE_URL}/storage/processed/dynamic/${videoFile}`
     }
     if (isCustomText) {
-      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state?.videoFile}`
+      return `${STORAGE_BASE_URL}/storage/processed/dynamic/${location.state?.videoFile}`
     }
     if (isTextDemo) {
-      return `http://127.0.0.1:8000/storage/processed/realistic_stitched_asl.mp4`
+      return `${STORAGE_BASE_URL}/storage/processed/realistic_stitched_asl.mp4`
     }
     return videoAPI.getASLVideoUrl(videoId)
   }, [isPresetDemo, isRealtimeText, isGenerativeAvatar, isAIGenerated, isCustomText, isTextDemo, location.state, videoId])
@@ -401,7 +401,7 @@ function VideoResultPage() {
                       <div key={index} className="relative group">
                         <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
                           <img
-                            src={`http://127.0.0.1:8000/storage/processed/images/${image.image_file}`}
+                            src={`${STORAGE_BASE_URL}/storage/processed/images/${image.image_file}`}
                             alt={`ASL sign for: ${image.concept}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
