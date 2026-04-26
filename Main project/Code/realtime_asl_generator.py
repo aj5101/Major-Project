@@ -27,9 +27,10 @@ class RealTimeASLGenerator:
     """Generates ASL videos in real-time based on user input"""
     
     def __init__(self):
+        _root = os.path.dirname(os.path.abspath(__file__))
         self.api_base = "http://localhost:8000/api"
-        self.storage_path = "/Users/arihantjain/Desktop/Main project/Code/storage/processed/realtime"
-        self.clips_path = "/Users/arihantjain/Desktop/Main project/Code/storage/asl_clips"
+        self.storage_path = os.getenv("ASL_REALTIME_PATH", os.path.join(_root, "storage", "processed", "realtime"))
+        self.clips_path = os.getenv("ASL_CLIPS_PATH", os.path.join(_root, "storage", "asl_clips"))
         os.makedirs(self.storage_path, exist_ok=True)
         self.ai_service = AIAgentService() if AIAgentService else None
         

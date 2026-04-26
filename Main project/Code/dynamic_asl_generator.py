@@ -13,8 +13,9 @@ class DynamicASLGenerator:
     """Generates custom ASL videos based on text input"""
     
     def __init__(self):
-        self.base_path = "/Users/arihantjain/Desktop/Main project/Code/storage/asl_clips"
-        self.output_path = "/Users/arihantjain/Desktop/Main project/Code/storage/processed/dynamic"
+        _root = os.path.dirname(os.path.abspath(__file__))
+        self.base_path = os.getenv("ASL_CLIPS_PATH", os.path.join(_root, "storage", "asl_clips"))
+        self.output_path = os.getenv("ASL_OUTPUT_PATH", os.path.join(_root, "storage", "processed", "dynamic"))
         os.makedirs(self.output_path, exist_ok=True)
         
         # Available ASL videos
