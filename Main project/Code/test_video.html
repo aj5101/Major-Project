@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test</title>
+</head>
+<body>
+    <h1>Video Test Page</h1>
+    <p>Testing direct video playback...</p>
+    
+    <video controls width="400" style="border: 2px solid #ccc;">
+        <source src="http://127.0.0.1:8000/storage/processed/dynamic/custom_3dfee5e9.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    
+    <p>If you see this video playing, then the video file is accessible and the issue is in the React component.</p>
+    
+    <script>
+        const video = document.querySelector('video');
+        video.addEventListener('error', function(e) {
+            console.error('Video error:', e);
+            document.body.innerHTML += '<p style="color: red;">Video Error: ' + e.message + '</p>';
+        });
+        
+        video.addEventListener('loadstart', function() {
+            console.log('Video loading started');
+        });
+        
+        video.addEventListener('canplay', function() {
+            console.log('Video can play');
+            document.body.innerHTML += '<p style="color: green;">✅ Video loaded successfully!</p>';
+        });
+    </script>
+</body>
+</html>

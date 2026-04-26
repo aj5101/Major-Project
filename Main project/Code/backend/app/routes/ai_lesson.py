@@ -1,0 +1,155 @@
+"""
+AI Lesson Generation API Routes
+Provides endpoints for AI-powered ASL lesson generation
+"""
+
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from pydantic import BaseModel
+from typing import List, Dict, Optional
+import sys
+import os
+
+# Add project root to path for imports
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from app.services.ai_lesson_service import generate_ai_lesson, is_ai_available, ai_lesson_service
+from dynamic_asl_generator import create_video_for_text
+
+router = APIRouter()
+
+class LessonRequest(BaseModel):
+    lesson_title: str
+    lesson_text: str
+    use_ai: bool = True
+
+class LessonResponse(BaseModel):
+    success: bool
+    lesson_data: Optional[Dict] = None
+    video_data: Optional[Dict] = None
+    image_data: Optional[Dict] = None
+    message: str
+    ai_available: bool
+
+@router.post("/generate-asl-lesson", response_model=LessonResponse)
+async def generate_asl_lesson(
+    request: LessonRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Generate ASL lesson using AI and create video
+    
+    This endpoint:
+    1. Processes lesson text with AI to create ASL-friendly content
+    2. Generates structured lesson data
+    3. Creates ASL video using existing pipeline
+    4. Returns complete lesson package
+    """
+    
+    # Check if AI is available
+    ai_available = is_ai_available()
+    
+    try:
+        # Try AI image generation first
+        try:
+            print("🖼️ Attempting AI image generation...")
+            lesson_data = await ai_lesson_service.generate_ai_image_lesson(
+                request.lesson_text,
+                request.lesson_title
+            )
+            
+            # Check if AI images were generated
+            if lesson_data.get("ai_images_used") and lesson_data.get("image_data"):
+                image_data = lesson_data["image_data"]
+                print(f"✅ AI images generated: {image_data.get('total_images')} images")
+                
+                return LessonResponse(
+                    success=True,
+                    lesson_data=lesson_data,
+                    image_data=image_data,
+                    message="AI lesson and images generated successfully!",
+                    ai_available=ai_available
+                )
+            else:
+                print("🔄 AI images not available, falling back to standard generation...")
+                
+        except Exception as ai_image_error:
+            print(f"❌ AI image generation failed: {ai_image_error}")
+        
+        # Fallback to standard AI lesson generation
+        print("🔄 Using standard lesson generation...")
+        lesson_data = generate_ai_lesson(
+            request.lesson_text,
+            request.lesson_title
+        )
+        
+        # Extract all ASL sequences for video generation
+        all_asl_words = []
+        for sentence in lesson_data.get("sentences", []):
+            asl_sequence = sentence.get("asl_sequence", [])
+            all_asl_words.extend(asl_sequence)
+        
+        # Create text for video generation from ASL sequences
+        video_text = " ".join(all_asl_words) if all_asl_words else request.lesson_text
+        
+        # Generate video using existing pipeline
+        try:
+            video_result = create_video_for_text(video_text)
+            video_data = {
+                "video_file": video_result["video_file"],
+                "signs": video_result["signs"],
+                "duration": video_result["duration"],
+                "text": video_result["text"]
+            }
+        except Exception as video_error:
+            print(f"❌ Fallback video generation failed: {video_error}")
+            video_data = None
+        
+        return LessonResponse(
+            success=True,
+            lesson_data=lesson_data,
+            video_data=video_data,
+            message="AI lesson generated successfully" if ai_available else "Lesson generated using fallback rules",
+            ai_available=ai_available
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate ASL lesson: {str(e)}"
+        )
+
+@router.get("/ai-status")
+async def get_ai_status():
+    """Check if AI lesson generation is available"""
+    return {
+        "ai_available": is_ai_available(),
+        "service": "Google Gemini AI",
+        "message": "AI lesson generation is available" if is_ai_available() else "AI service not configured - using fallback rules"
+    }
+
+@router.post("/preview-lesson")
+async def preview_lesson(request: LessonRequest):
+    """
+    Preview AI-processed lesson without generating video
+    Faster endpoint for preview functionality
+    """
+    try:
+        lesson_data = generate_ai_lesson(
+            request.lesson_text,
+            request.lesson_title
+        )
+        
+        return {
+            "success": True,
+            "lesson_data": lesson_data,
+            "ai_available": is_ai_available(),
+            "message": "Lesson preview generated"
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to preview lesson: {str(e)}"
+        )
