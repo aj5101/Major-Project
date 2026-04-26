@@ -169,38 +169,10 @@ function VideoResultPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-6"></div>
-        <h2 className="text-2xl font-bold text-primary-900">Loading your project...</h2>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container-main pt-32 pb-20">
-        <div className="card p-8 border-l-4 border-error bg-error-light/10">
-          <div className="flex items-start gap-4">
-            <div className="text-3xl">⚠️</div>
-            <div>
-              <h2 className="text-xl font-bold text-error-dark mb-2">Processing Error</h2>
-              <p className="text-primary-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!status) return null
-
+  // All useMemo hooks must be declared before any conditional early returns (Rules of Hooks)
   const simplifiedText = result?.simplified_text || ""
   const teacherTokens = useMemo(() => {
-    const raw = simplifiedText
-      .replace(/\s+/g, " ")
-      .trim();
+    const raw = simplifiedText.replace(/\s+/g, " ").trim();
     if (!raw) return [];
     return raw.match(/\b[\w']+\b/g) || [];
   }, [simplifiedText])
@@ -231,35 +203,56 @@ function VideoResultPage() {
 
   const aslVideoSrc = useMemo(() => {
     if (isPresetDemo) {
-      return `http://127.0.0.1:8000/storage/processed/preset_videos/${location.state.videoFile}`
+      return `http://127.0.0.1:8000/storage/processed/preset_videos/${location.state?.videoFile}`
     }
     if (isRealtimeText) {
-      return `http://127.0.0.1:8000/storage/processed/realtime/${location.state.videoFile}`
+      return `http://127.0.0.1:8000/storage/processed/realtime/${location.state?.videoFile}`
     }
     if (isGenerativeAvatar) {
-      // generated_media route serves these consistently
-      return `http://127.0.0.1:8000/api/generated/generative/${location.state.videoFile}`
+      return `http://127.0.0.1:8000/api/generated/generative/${location.state?.videoFile}`
     }
     if (isAIGenerated) {
-      // AI-generated lessons use dynamic storage
-      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state.videoFile}`
+      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state?.videoFile}`
     }
     if (!location.state && videoId && videoId.startsWith('ai-lesson-')) {
-      // Fallback for direct AI lesson URL visits
       const videoFile = videoId.replace('ai-lesson-', '') + '.mp4'
-      const videoUrl = `http://127.0.0.1:8000/storage/processed/dynamic/${videoFile}`
-      console.log('AI Lesson video URL:', videoUrl)
-      return videoUrl
+      return `http://127.0.0.1:8000/storage/processed/dynamic/${videoFile}`
     }
     if (isCustomText) {
-      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state.videoFile}`
+      return `http://127.0.0.1:8000/storage/processed/dynamic/${location.state?.videoFile}`
     }
     if (isTextDemo) {
       return `http://127.0.0.1:8000/storage/processed/realistic_stitched_asl.mp4`
     }
-    // Uploaded video pipeline
     return videoAPI.getASLVideoUrl(videoId)
   }, [isPresetDemo, isRealtimeText, isGenerativeAvatar, isAIGenerated, isCustomText, isTextDemo, location.state, videoId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-6"></div>
+        <h2 className="text-2xl font-bold text-primary-900">Loading your project...</h2>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container-main pt-32 pb-20">
+        <div className="card p-8 border-l-4 border-error bg-error-light/10">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">⚠️</div>
+            <div>
+              <h2 className="text-xl font-bold text-error-dark mb-2">Processing Error</h2>
+              <p className="text-primary-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!status) return null
 
   const setRate = (rate) => {
     setPlaybackRate(rate)
