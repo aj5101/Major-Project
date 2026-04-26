@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storage (keep structure, ignore content)
+storage/videos/*
+!storage/videos/.gitkeep
+storage/asl_clips/*
+!storage/asl_clips/.gitkeep
+storage/processed/*
+!storage/processed/.gitkeep
+storage/embeddings/*
+!storage/embeddings/.gitkeep
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# FAISS index
+storage/faiss_index.bin
+storage/faiss_metadata.npz
+
+# Datasets (large files)
+datasets/*/
+!datasets/README.md
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
