@@ -27,6 +27,13 @@ except ImportError:
     AI_IMAGE_AVAILABLE = False
     print("⚠️ AI image service not available")
 
+try:
+    from .fallback_image_service import generate_concept_cards
+    FALLBACK_IMAGE_AVAILABLE = True
+except ImportError:
+    FALLBACK_IMAGE_AVAILABLE = False
+    print("⚠️ Fallback image service not available")
+
 class AILessonService:
     """Service for AI-powered ASL lesson generation"""
     
@@ -274,8 +281,30 @@ Process the lesson now and return ONLY the JSON:
             except Exception as e:
                 print(f"❌ AI image generation failed: {e}")
         
-        # Fallback to existing system (no images)
-        print("🔄 Using fallback (no images)")
+        # Fallback: generate local concept cards with Pillow (no external API needed)
+        if FALLBACK_IMAGE_AVAILABLE:
+            try:
+                print("🖼️ Generating local ASL concept cards (no API key required)...")
+                simplified_text = " ".join([s.get("simplified", "") for s in lesson_data.get("sentences", [])])
+                concepts = [w for w in simplified_text.split() if len(w) > 2][:3] or ["hello", "learn", "together"]
+
+                _root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+                storage_dir = os.getenv("STORAGE_PATH", os.path.join(_root, "storage"))
+
+                image_results = generate_concept_cards(concepts, storage_dir)
+                if image_results:
+                    lesson_data["image_data"] = {
+                        "images": image_results,
+                        "total_images": len(image_results),
+                        "ai_generated": False,
+                        "text": simplified_text,
+                    }
+                    lesson_data["ai_images_used"] = True
+                    return lesson_data
+            except Exception as e:
+                print(f"❌ Fallback image generation failed: {e}")
+
+        print("🔄 No image generation available")
         return lesson_data
 
 # Global instance

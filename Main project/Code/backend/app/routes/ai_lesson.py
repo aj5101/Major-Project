@@ -51,69 +51,32 @@ async def generate_asl_lesson(
     ai_available = is_ai_available()
     
     try:
-        # Try AI image generation first
-        try:
-            print("🖼️ Attempting AI image generation...")
-            lesson_data = await ai_lesson_service.generate_ai_image_lesson(
-                request.lesson_text,
-                request.lesson_title
-            )
-            
-            # Check if AI images were generated
-            if lesson_data.get("ai_images_used") and lesson_data.get("image_data"):
-                image_data = lesson_data["image_data"]
-                print(f"✅ AI images generated: {image_data.get('total_images')} images")
-                
-                return LessonResponse(
-                    success=True,
-                    lesson_data=lesson_data,
-                    image_data=image_data,
-                    message="AI lesson and images generated successfully!",
-                    ai_available=ai_available
-                )
-            else:
-                print("🔄 AI images not available, falling back to standard generation...")
-                
-        except Exception as ai_image_error:
-            print(f"❌ AI image generation failed: {ai_image_error}")
-        
-        # Fallback to standard AI lesson generation
-        print("🔄 Using standard lesson generation...")
-        lesson_data = generate_ai_lesson(
+        print("🖼️ Generating ASL lesson with images...")
+        lesson_data = await ai_lesson_service.generate_ai_image_lesson(
             request.lesson_text,
             request.lesson_title
         )
-        
-        # Extract all ASL sequences for video generation
-        all_asl_words = []
-        for sentence in lesson_data.get("sentences", []):
-            asl_sequence = sentence.get("asl_sequence", [])
-            all_asl_words.extend(asl_sequence)
-        
-        # Create text for video generation from ASL sequences
-        video_text = " ".join(all_asl_words) if all_asl_words else request.lesson_text
-        
-        # Generate video using existing pipeline
-        try:
-            video_result = create_video_for_text(video_text)
-            video_data = {
-                "video_file": video_result["video_file"],
-                "signs": video_result["signs"],
-                "duration": video_result["duration"],
-                "text": video_result["text"]
-            }
-        except Exception as video_error:
-            print(f"❌ Fallback video generation failed: {video_error}")
-            video_data = None
-        
+
+        if lesson_data.get("ai_images_used") and lesson_data.get("image_data"):
+            image_data = lesson_data["image_data"]
+            print(f"✅ Images ready: {image_data.get('total_images')} images")
+            return LessonResponse(
+                success=True,
+                lesson_data=lesson_data,
+                image_data=image_data,
+                message="ASL lesson with images generated successfully!",
+                ai_available=ai_available
+            )
+
+        # Images couldn't be generated at all — return lesson structure only
+        print("⚠️ No images generated, returning lesson structure only")
         return LessonResponse(
             success=True,
             lesson_data=lesson_data,
-            video_data=video_data,
-            message="AI lesson generated successfully" if ai_available else "Lesson generated using fallback rules",
+            message="Lesson generated (image generation unavailable)",
             ai_available=ai_available
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
