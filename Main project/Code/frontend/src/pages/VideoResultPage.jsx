@@ -34,6 +34,23 @@ function VideoResultPage() {
   const lessonSentences = location.state?.sentences || null;
   const imageData = location.state?.imageData || null;
 
+  // Debug: log imageData to console for diagnostics
+  React.useEffect(() => {
+    if (imageData) {
+      console.log('[VideoResultPage] imageData received:', imageData)
+      console.log('[VideoResultPage] image count:', imageData?.images?.length)
+      imageData?.images?.forEach((img, i) => {
+        const url = `http://127.0.0.1:8000/storage/processed/images/${img.image_file}`
+        console.log(`[VideoResultPage] image[${i}] url:`, url, '| concept:', img.concept)
+        fetch(url, { method: 'HEAD' })
+          .then(r => console.log(`[VideoResultPage] image[${i}] HEAD status:`, r.status))
+          .catch(e => console.error(`[VideoResultPage] image[${i}] HEAD failed:`, e.message))
+      })
+    } else {
+      console.log('[VideoResultPage] no imageData in navigation state')
+    }
+  }, [])
+
   useEffect(() => {
     // Handle case where user directly visits AI lesson URL (no state available)
     if (!location.state && videoId && videoId.startsWith('ai-lesson-')) {
@@ -395,7 +412,17 @@ function VideoResultPage() {
                             alt={`ASL sign for: ${image.concept}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
-                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40NzcgMiAyIDYuNDc3IDIgMTJTNi40NzcgMjIgMTIgMjJDMTcuNTIzIDIyIDIyIDE3LjUyMyAyMiAxMlMyMiA2LjQ3NyAxNy41MjMgMiAxMloiIHN0cm9rZT0iIzkyQTNEQiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIgc3Ryb2tlPSIjOTJBM0RCIiBzdHJva2Utd2lkdGg9IjIiLz4KPGxpbmUgeDE9IjEyIiB5MT0iOCIgeDI9IjEyIiB5Mj0iMTYiIHN0cm9rZT0iIzkyQTNEQiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+';
+                              const failedUrl = e.target.src
+                              console.error('[VideoResultPage] image load failed:', failedUrl)
+                              e.target.onerror = null
+                              e.target.style.display = 'none'
+                              const parent = e.target.parentElement
+                              if (parent && !parent.querySelector('.img-fallback')) {
+                                const fb = document.createElement('div')
+                                fb.className = 'img-fallback w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400 bg-gray-100'
+                                fb.innerHTML = '<span style="font-size:2rem">🤟</span><span style="font-size:0.7rem;text-align:center;padding:0 4px">Image unavailable<br/>' + image.concept + '</span>'
+                                parent.appendChild(fb)
+                              }
                             }}
                           />
                         </div>

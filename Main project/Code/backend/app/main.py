@@ -65,12 +65,10 @@ app.include_router(realtime_asl_router, prefix="/api", tags=["Real-Time ASL"])
 app.include_router(lesson.router, prefix="/api", tags=["Lesson Mode"])
 app.include_router(ai_lesson.router, prefix="/api", tags=["AI Lesson Generation"])
 
-# Serve static files (storage directory)
+# Serve static files (storage directory) - create it if missing so mount always succeeds
 storage_dir = os.path.join(project_root, "storage")
-if os.path.exists(storage_dir):
-    app.mount("/storage", StaticFiles(directory=storage_dir), name="storage")
-else:
-    print(f"⚠️ Storage directory not found: {storage_dir}")
+os.makedirs(os.path.join(storage_dir, "processed", "images"), exist_ok=True)
+app.mount("/storage", StaticFiles(directory=storage_dir), name="storage")
 
 
 @app.on_event("startup")

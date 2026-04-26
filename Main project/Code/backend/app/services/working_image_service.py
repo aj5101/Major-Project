@@ -92,7 +92,8 @@ class WorkingImageService:
                     base64_image = artifacts[0].get("base64")
                     if base64_image:
                         # Save image to local storage
-                        storage_path = os.getenv("STORAGE_PATH", "/Users/arihantjain/Desktop/Main project/Code/storage")  # Use absolute path
+                        _svc_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+                        storage_path = os.getenv("STORAGE_PATH", os.path.join(_svc_root, "storage"))
                         image_dir = os.path.join(storage_path, "processed", "images")
                         os.makedirs(image_dir, exist_ok=True)
                         
