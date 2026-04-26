@@ -227,6 +227,33 @@ function VideoResultPage() {
     return videoAPI.getASLVideoUrl(videoId)
   }, [isPresetDemo, isRealtimeText, isGenerativeAvatar, isAIGenerated, isCustomText, isTextDemo, location.state, videoId])
 
+  // Must be before early returns — hooks cannot come after conditional returns
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+
+    const onLoaded = () => {
+      if (!Number.isNaN(el.duration) && Number.isFinite(el.duration)) {
+        setVideoDuration(el.duration)
+      }
+      el.playbackRate = playbackRate
+    }
+    const onTime = () => {
+      setCurrentTime(el.currentTime || 0)
+      if (repeatRange && el.currentTime >= repeatRange.end) {
+        el.currentTime = repeatRange.start
+        el.play()
+      }
+    }
+
+    el.addEventListener("loadedmetadata", onLoaded)
+    el.addEventListener("timeupdate", onTime)
+    return () => {
+      el.removeEventListener("loadedmetadata", onLoaded)
+      el.removeEventListener("timeupdate", onTime)
+    }
+  }, [repeatRange, playbackRate])
+
   if (loading) {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
@@ -312,33 +339,6 @@ function VideoResultPage() {
     videoRef.current.currentTime = idx * wordTime
     videoRef.current.play()
   }
-
-  useEffect(() => {
-    const el = videoRef.current
-    if (!el) return
-
-    const onLoaded = () => {
-      if (!Number.isNaN(el.duration) && Number.isFinite(el.duration)) {
-        setVideoDuration(el.duration)
-      }
-      el.playbackRate = playbackRate
-    }
-    const onTime = () => {
-      setCurrentTime(el.currentTime || 0)
-      if (repeatRange && el.currentTime >= repeatRange.end) {
-        el.currentTime = repeatRange.start
-        // keep playing
-        el.play()
-      }
-    }
-
-    el.addEventListener("loadedmetadata", onLoaded)
-    el.addEventListener("timeupdate", onTime)
-    return () => {
-      el.removeEventListener("loadedmetadata", onLoaded)
-      el.removeEventListener("timeupdate", onTime)
-    }
-  }, [repeatRange, playbackRate])
 
   return (
     <div className="min-h-screen pt-28 pb-20 bg-surface-50">
